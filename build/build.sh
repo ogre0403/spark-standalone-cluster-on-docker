@@ -53,6 +53,10 @@ function cleanContainers() {
     docker stop "${container}"
     docker rm "${container}"
 
+    container="$(docker ps -a | grep 'spark-history' | awk '{print $1}')"
+    docker stop "${container}"
+    docker rm "${container}"
+
     container="$(docker ps -a | grep 'spark-base' | awk '{print $1}')"
     docker stop "${container}"
     docker rm "${container}"
@@ -75,6 +79,7 @@ function cleanImages() {
       docker rmi -f "$(docker images | grep -m 1 'spark-worker' | awk '{print $3}')"
       docker rmi -f "$(docker images | grep -m 1 'spark-master' | awk '{print $3}')"
       docker rmi -f "$(docker images | grep -m 1 'spark-base' | awk '{print $3}')"
+      docker rmi -f "$(docker images | grep -m 1 'spark-history' | awk '{print $3}')"
     fi
 
     if [[ "${SHOULD_BUILD_BASE}" == "true" ]]
@@ -85,7 +90,7 @@ function cleanImages() {
 }
 
 function cleanVolume() {
-  docker volume rm "hadoop-distributed-file-system"
+  docker volume rm "hadoop-distributed-file-system" "event-log-file-system"
 }
 
 function buildImages() {
@@ -120,6 +125,12 @@ function buildImages() {
       --build-arg spark_version="${SPARK_VERSION}" \
       -f docker/spark-worker/Dockerfile \
       -t spark-worker:${SPARK_VERSION} .
+
+    docker build \
+      --build-arg build_date="${BUILD_DATE}" \
+      --build-arg spark_version="${SPARK_VERSION}" \
+      -f docker/spark-history/Dockerfile \
+      -t spark-history:${SPARK_VERSION} .
 
   fi
 
