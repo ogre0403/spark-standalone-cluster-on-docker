@@ -1,0 +1,80 @@
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "worker.name" . }}
+  labels:
+    {{- include "worker.label" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "worker.label" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "worker.label" . | nindent 8 }}
+    spec:
+      containers:
+      - name: my-worker
+        image: spark-worker:3.3.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8081
+          name: worker
+        volumeMounts:
+        - name: hdfs
+          mountPath: /opt/workspace
+        - name: event-log
+          mountPath: /opt/log
+        env:
+        - name: SPARK_MASTER_HOST
+          value: {{ include "master.name" . }}
+        - name: SPARK_MASTER_PORT
+          value: "7077"    
+        - name: SPARK_WORKER_CORES
+          value: "1"
+        - name: SPARK_WORKER_MEMORY
+          value: "512m"
+        resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - name: hdfs
+        persistentVolumeClaim:
+          claimName: {{ include "hdfs-pvc.name" . }}
+      - name: event-log
+        persistentVolumeClaim:
+          claimName: {{ include "event-pvc.name" . }}   
+---
+# svc
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "worker.name" . }}
+spec:
+  selector:
+    {{- include "worker.label" . | nindent 4 }}
+  ports:
+  - port: 8081
+    targetPort: 8081
+    name: worker
+---
+# ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "worker.name" . }}
+  labels:
+    {{- include "worker.label" . | nindent 4 }}
+spec:
+  rules:
+  - host: {{ include "worker.url" . }}
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: {{ include "worker.name" . }}
+            port: 
+              number: 8081

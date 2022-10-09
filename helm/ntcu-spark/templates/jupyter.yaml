@@ -1,0 +1,101 @@
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jupyter.name" . }}
+  labels:
+    {{- include "jupyter.label" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "jupyter.label" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "jupyter.label" . | nindent 8 }}
+    spec:
+      hostname: jupyter
+      # must match headless service name
+      subdomain: {{ .Values.schoolId }}
+      setHostnameAsFQDN: true
+      containers:
+      - name: jupyter
+        image: jupyterlab:3.4.8-spark-3.3.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8888
+          name: jupyter
+        - containerPort: 4040
+          name: app
+        volumeMounts:
+        - name: hdfs
+          mountPath: /opt/workspace
+        - name: event-log
+          mountPath: /opt/log          
+        resources:
+            {{- toYaml .Values.resources | nindent 12 }}        
+      volumes:
+      - name: hdfs
+        persistentVolumeClaim:
+          claimName: {{ include "hdfs-pvc.name" . }}
+      - name: event-log
+        persistentVolumeClaim:
+          claimName: {{ include "event-pvc.name" . }}           
+---
+# svc
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "jupyter.name" . }}
+spec:
+  selector:
+    {{- include "jupyter.label" . | nindent 4 }}
+  ports:
+  - port: 8888
+    targetPort: 8888
+    name: jupyter
+  - port: 4040
+    targetPort: 4040
+    name: app
+---
+# headless svc, used with pod hostname to resolve pod ip from pod FQDN
+# https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-hostname-and-subdomain-fields
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.schoolId }}
+spec:
+  selector:
+    {{- include "jupyter.label" . | nindent 4 }}
+  clusterIP: None
+---
+# ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "jupyter.name" . }}
+  labels:
+    {{- include "jupyter.label" . | nindent 4 }}
+spec:
+  rules:
+  - host: {{ include "jupyter.url" . }}
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: {{ include "jupyter.name" . }}
+            port: 
+              number: 8888
+  - host: {{ include "app.url" . }}
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: {{ include "jupyter.name" . }}
+            port: 
+              number: 4040             

@@ -1,0 +1,64 @@
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "history.name" . }}
+  labels:
+    {{- include "history.label" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "history.label" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "history.label" . | nindent 8 }}
+    spec:
+      containers:
+      - name: spark-history
+        image: spark-history:3.3.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 18080
+        volumeMounts:
+        - name: event-log
+          mountPath: /opt/log
+        resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - name: event-log
+        persistentVolumeClaim:
+          claimName: {{ include "event-pvc.name" . }}
+---
+# svc
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "history.name" . }}
+spec:
+  selector:
+    {{- include "history.label" . | nindent 4 }}
+  ports:
+  - port: 18080
+    targetPort: 18080
+---
+# ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "history.name" . }}
+  labels:
+    {{- include "history.label" . | nindent 4 }}
+spec:
+  rules:
+  - host: {{ include "history.url" . }}
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: {{ include "history.name" . }}
+            port: 
+              number: 18080

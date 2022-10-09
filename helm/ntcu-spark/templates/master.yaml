@@ -1,0 +1,79 @@
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "master.name" . }}
+  labels:
+    {{- include "master.label" . | nindent 4 }}  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "master.label" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "master.label" . | nindent 8 }}
+    spec:
+      containers:
+      - name: my-master
+        image: spark-master:3.3.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: ui
+        - containerPort: 7077
+          name: mmm
+        volumeMounts:
+        - name: hdfs
+          mountPath: /opt/workspace
+        - name: event-log
+          mountPath: /opt/log
+        env:
+        - name: SPARK_MASTER_HOST
+          value: "0.0.0.0"
+        resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - name: hdfs
+        persistentVolumeClaim:
+          claimName: {{ include "hdfs-pvc.name" . }}
+      - name: event-log
+        persistentVolumeClaim:
+          claimName: {{ include "event-pvc.name" . }}      
+---
+# svc
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "master.name" . }}
+spec:
+  selector:
+    {{- include "master.label" . | nindent 4 }}
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: ui
+  - port: 7077
+    targetPort: 7077
+    name: mmm
+---
+# ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "master.name" . }}
+  labels:
+    {{- include "master.label" . | nindent 4 }}
+spec:
+  rules:
+  - host: {{ include "master.url" . }}
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: {{ include "master.name" . }}
+            port: 
+              number: 8080
