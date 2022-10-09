@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: spark-history
-        image: spark-history:3.3.0
-        imagePullPolicy: IfNotPresent
+        image: {{ .Values.image.history }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 18080
         volumeMounts:

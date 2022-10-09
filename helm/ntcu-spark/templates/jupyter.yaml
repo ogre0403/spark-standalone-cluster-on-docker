@@ -21,8 +21,8 @@ spec:
       setHostnameAsFQDN: true
       containers:
       - name: jupyter
-        image: jupyterlab:3.4.8-spark-3.3.0
-        imagePullPolicy: IfNotPresent
+        image: {{ .Values.image.jupyter }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 8888
           name: jupyter

@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: my-master
-        image: spark-master:3.3.0
-        imagePullPolicy: IfNotPresent
+        image: {{ .Values.image.master }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 8080
           name: ui

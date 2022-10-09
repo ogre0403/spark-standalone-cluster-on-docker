@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: my-worker
-        image: spark-worker:3.3.0
-        imagePullPolicy: IfNotPresent
+        image: {{ .Values.image.worker }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 8081
           name: worker
