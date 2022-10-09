@@ -32,6 +32,15 @@ app: {{ include "jupyter.name" . }}
 {{- printf "%s-%s" (include "jupyter.name" .) .Values.domain }}
 {{- end }}
 
+
+{{- define "jupyter.token" -}}
+{{- if .Values.token }}
+{{- printf "%s=%s" "--NotebookApp.token" .Values.token }}
+{{- else }}
+{{- printf "%s=" "--NotebookApp.token" }}
+{{- end }}
+{{- end }}
+
 {{- define "app.url" -}}
 {{- printf "%s-%s-%s" .Values.schoolId "app" .Values.domain }}
 {{- end }}
