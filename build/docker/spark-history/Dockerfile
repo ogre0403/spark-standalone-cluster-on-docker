@@ -18,9 +18,9 @@ LABEL org.label-schema.schema-version="1.0"
 
 # RUN echo "spark.history.fs.logDirectory file:/opt/log" >>  /usr/bin/spark-3.3.0-bin-hadoop3/conf/spark-defaults.conf
 
-RUN echo 'spark.history.fs.logDirectory    file:/opt/log  \n\
-spark.eventLog.enabled           true \n\
-spark.eventLog.dir               file:/opt/log ' >>  /usr/bin/spark-3.3.0-bin-hadoop3/conf/spark-defaults.conf
+# RUN echo 'spark.history.fs.logDirectory    file:/opt/log  \n\
+# spark.eventLog.enabled           true \n\
+# spark.eventLog.dir               file:/opt/log ' >>  /usr/bin/spark-3.3.0-bin-hadoop3/conf/spark-defaults.conf
 
 
 EXPOSE 18080

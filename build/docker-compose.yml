@@ -43,6 +43,8 @@ services:
     environment:
       - SPARK_WORKER_CORES=1
       - SPARK_WORKER_MEMORY=512m
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
     ports:
       - 8081:8081
     volumes:
@@ -56,6 +58,8 @@ services:
     environment:
       - SPARK_WORKER_CORES=1
       - SPARK_WORKER_MEMORY=512m
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
     ports:
       - 8082:8081
     volumes:
