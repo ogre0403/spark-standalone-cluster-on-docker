@@ -16,12 +16,10 @@ spec:
       labels:
         app: jupyterlab
     spec:
-      initContainers:
-      - name: init-myservice
-        image: jupyterlab:3.4.8-spark-3.3.0
-        command: ["/bin/sh", "-c", "echo AAA $MY_POD_IP"]
-        # args:
-        # - echo "spark.driver.host  $MY_POD_IP" >> /usr/bin/spark-3.3.0-bin-hadoop3/conf/spark-defaults.conf
+      hostname: jupyter
+      # must match headless service name
+      subdomain: domain
+      setHostnameAsFQDN: true
       containers:
       - name: jupyter
         image: jupyterlab:3.4.8-spark-3.3.0
@@ -33,16 +31,16 @@ spec:
         volumeMounts:
         - name: hdfs
           mountPath: /opt/workspace
-        env:
-        - name: MY_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
+        - name: event-log
+          mountPath: /opt/log          
         resources: {} 
       volumes:
       - name: hdfs
         persistentVolumeClaim:
           claimName: hdfs
+      - name: event-log
+        persistentVolumeClaim:
+          claimName: event-log              
 ---
 # svc
 apiVersion: v1
@@ -56,6 +54,18 @@ spec:
   ports:
   - port: 8888
     targetPort: 8888
+---
+# headless svc, used with pod hostname to resolve pod ip from pod FQDN
+# https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-hostname-and-subdomain-fields
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: domain
+spec:
+  selector:
+    app: jupyterlab
+  clusterIP: None
 ---
 # ingress
 apiVersion: networking.k8s.io/v1

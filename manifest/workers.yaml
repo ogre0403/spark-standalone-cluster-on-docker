@@ -63,21 +63,21 @@ spec:
     name: worker
 ---
 # ingress
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: my-spark-master
-#   labels:
-#     name: my-spark-master
-# spec:
-#   rules:
-#   - host: master.127-0-0-1.nip.io
-#     http:
-#       paths:
-#       - pathType: Prefix
-#         path: "/"
-#         backend:
-#           service:
-#             name: my-master
-#             port: 
-#               number: 8080
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-worker
+  labels:
+    name: my-worker
+spec:
+  rules:
+  - host: worker.127-0-0-1.nip.io
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: my-worker
+            port: 
+              number: 8081
