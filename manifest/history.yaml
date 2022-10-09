@@ -1,0 +1,67 @@
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: spark-history
+  labels:
+    app: spark-history
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-history
+  template:
+    metadata:
+      labels:
+        app: spark-history
+    spec:
+      containers:
+      - name: spark-history
+        image: spark-history:3.3.0
+        imagePullPolicy: IfNotPresent
+        # command: [ "/bin/bash", "-c", "--" ]
+        # args: [ "while true; do sleep 30; done;" ]
+        ports:
+        - containerPort: 18080
+        volumeMounts:
+        - name: event-log
+          mountPath: /opt/log
+        resources: {}   
+      volumes:
+      - name: event-log
+        persistentVolumeClaim:
+          claimName: event-log
+---
+# svc
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: spark-history
+spec:
+  selector:
+    app: spark-history
+  ports:
+  - port: 18080
+    targetPort: 18080
+---
+# ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: spark-history
+  labels:
+    name: spark-history
+spec:
+  rules:
+  - host: history.127-0-0-1.nip.io
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: spark-history
+            port: 
+              number: 18080

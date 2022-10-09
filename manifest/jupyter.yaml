@@ -1,0 +1,78 @@
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: jupyterlab
+  labels:
+    app: jupyterlab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jupyterlab
+  template:
+    metadata:
+      labels:
+        app: jupyterlab
+    spec:
+      initContainers:
+      - name: init-myservice
+        image: jupyterlab:3.4.8-spark-3.3.0
+        command: ["/bin/sh", "-c", "echo AAA $MY_POD_IP"]
+        # args:
+        # - echo "spark.driver.host  $MY_POD_IP" >> /usr/bin/spark-3.3.0-bin-hadoop3/conf/spark-defaults.conf
+      containers:
+      - name: jupyter
+        image: jupyterlab:3.4.8-spark-3.3.0
+        imagePullPolicy: IfNotPresent
+        # command: [ "/bin/bash", "-c", "--" ]
+        # args: [ "while true; do sleep 30; done;" ]
+        ports:
+        - containerPort: 8888
+        volumeMounts:
+        - name: hdfs
+          mountPath: /opt/workspace
+        env:
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        resources: {} 
+      volumes:
+      - name: hdfs
+        persistentVolumeClaim:
+          claimName: hdfs
+---
+# svc
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: jupyterlab
+spec:
+  selector:
+    app: jupyterlab
+  ports:
+  - port: 8888
+    targetPort: 8888
+---
+# ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jupyterlab
+  labels:
+    name: jupyterlab
+spec:
+  rules:
+  - host: jupyter.127-0-0-1.nip.io
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: jupyterlab
+            port: 
+              number: 8888

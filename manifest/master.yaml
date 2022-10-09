@@ -1,0 +1,82 @@
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: my-master
+  labels:
+    app: my-master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-master
+  template:
+    metadata:
+      labels:
+        app: my-master
+    spec:
+      containers:
+      - name: my-master
+        image: spark-master:3.3.0
+        imagePullPolicy: IfNotPresent
+        # command: [ "/bin/bash", "-c", "--" ]
+        # args: [ "while true; do sleep 30; done;" ]
+        ports:
+        - containerPort: 8080
+          name: ui
+        - containerPort: 7077
+          name: mmm
+        volumeMounts:
+        - name: hdfs
+          mountPath: /opt/workspace
+        - name: event-log
+          mountPath: /opt/log
+        env:
+        - name: SPARK_MASTER_HOST
+          value: "0.0.0.0"
+        resources: {}  
+      volumes:
+      - name: hdfs
+        persistentVolumeClaim:
+          claimName: hdfs
+      - name: event-log
+        persistentVolumeClaim:
+          claimName: event-log       
+---
+# svc
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: my-master
+spec:
+  selector:
+    app: my-master
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: ui
+  - port: 7077
+    targetPort: 7077
+    name: mmm
+---
+# ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-spark-master
+  labels:
+    name: my-spark-master
+spec:
+  rules:
+  - host: master.127-0-0-1.nip.io
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: my-master
+            port: 
+              number: 8080
