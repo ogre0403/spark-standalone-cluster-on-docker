@@ -28,6 +28,9 @@ spec:
         # args: [ "while true; do sleep 30; done;" ]
         ports:
         - containerPort: 8888
+          name: jupyter
+        - containerPort: 4040
+          name: app
         volumeMounts:
         - name: hdfs
           mountPath: /opt/workspace
@@ -54,6 +57,10 @@ spec:
   ports:
   - port: 8888
     targetPort: 8888
+    name: jupyter
+  - port: 4040
+    targetPort: 4040
+    name: app
 ---
 # headless svc, used with pod hostname to resolve pod ip from pod FQDN
 # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-hostname-and-subdomain-fields
@@ -86,3 +93,13 @@ spec:
             name: jupyterlab
             port: 
               number: 8888
+  - host: app.127-0-0-1.nip.io
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: jupyterlab
+            port: 
+              number: 4040             
