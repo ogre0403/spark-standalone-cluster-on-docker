@@ -16,7 +16,7 @@ app: {{ include "history.name" . }}
 {{- end }}
 
 {{- define "history.url" -}}
-{{- printf "%s-%s" (include "history.name" .) .Values.domain }}
+{{- printf "%s.%s" (include "history.name" .) .Values.domain }}
 {{- end }}
 
 
@@ -29,7 +29,7 @@ app: {{ include "jupyter.name" . }}
 {{- end }}
 
 {{- define "jupyter.url" -}}
-{{- printf "%s-%s" (include "jupyter.name" .) .Values.domain }}
+{{- printf "%s.%s" (include "jupyter.name" .) .Values.domain }}
 {{- end }}
 
 
@@ -42,7 +42,7 @@ app: {{ include "jupyter.name" . }}
 {{- end }}
 
 {{- define "app.url" -}}
-{{- printf "%s-%s-%s" .Values.schoolId "app" .Values.domain }}
+{{- printf "%s-%s.%s" .Values.schoolId "app" .Values.domain }}
 {{- end }}
 
 
@@ -56,7 +56,7 @@ app: {{ include "master.name" . }}
 {{- end }}
 
 {{- define "master.url" -}}
-{{- printf "%s-%s" (include "master.name" .) .Values.domain }}
+{{- printf "%s.%s" (include "master.name" .) .Values.domain }}
 {{- end }}
 
 
@@ -69,7 +69,7 @@ app: {{ include "worker.name" . }}
 {{- end }}
 
 {{- define "worker.url" -}}
-{{- printf "%s-%s" (include "worker.name" .) .Values.domain }}
+{{- printf "%s.%s" (include "worker.name" .) .Values.domain }}
 {{- end }}
 
 # ===============================================

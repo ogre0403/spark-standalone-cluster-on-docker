@@ -81,6 +81,7 @@ metadata:
   labels:
     {{- include "jupyter.label" . | nindent 4 }}
 spec:
+  ingressClassName: {{ .Values.ingressClass }}
   rules:
   - host: {{ include "jupyter.url" . }}
     http:

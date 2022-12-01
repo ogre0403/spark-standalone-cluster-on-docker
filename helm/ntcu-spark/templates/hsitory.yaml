@@ -51,6 +51,7 @@ metadata:
   labels:
     {{- include "history.label" . | nindent 4 }}
 spec:
+  ingressClassName: {{ .Values.ingressClass }}
   rules:
   - host: {{ include "history.url" . }}
     http:

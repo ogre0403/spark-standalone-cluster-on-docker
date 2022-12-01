@@ -67,6 +67,7 @@ metadata:
   labels:
     {{- include "worker.label" . | nindent 4 }}
 spec:
+  ingressClassName: {{ .Values.ingressClass }}
   rules:
   - host: {{ include "worker.url" . }}
     http:
