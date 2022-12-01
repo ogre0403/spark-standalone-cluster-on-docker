@@ -34,4 +34,6 @@
 	    ascending=False).collect()
 
     for (word, count) in counts:
-      print("{}: {}".format(word, count))    
+      print("{}: {}".format(word, count))
+    
+    spark.close()
