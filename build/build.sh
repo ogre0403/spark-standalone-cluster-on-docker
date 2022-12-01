@@ -15,6 +15,8 @@ SHOULD_BUILD_JUPYTERLAB="$(ggrep -m 1 build_jupyter build.yml | ggrep -o -P '(?<
 SPARK_VERSION="$(ggrep -m 1 spark build.yml | ggrep -o -P '(?<=").*(?=")')"
 JUPYTERLAB_VERSION="$(ggrep -m 1 jupyterlab build.yml | ggrep -o -P '(?<=").*(?=")')"
 
+IMAGE_REPOSITORY="$(ggrep -m 1 repository build.yml |ggrep -o -P '(?<=").*(?=")')"
+
 SPARK_VERSION_MAJOR=${SPARK_VERSION:0:1}
 
 if [[ "${SPARK_VERSION_MAJOR}" == "2" ]]
@@ -148,6 +150,20 @@ function buildImages() {
 
 }
 
+
+function addImageTags() {
+
+  if [ -z "$IMAGE_REPOSITORY" ]
+  then
+    exit 0
+  fi
+
+  docker tag "$(docker images | grep -m 1 'jupyterlab'    | awk '{print $3}')" ${IMAGE_REPOSITORY}/jupyterlab:${JUPYTERLAB_VERSION}-spark-${SPARK_VERSION}
+  docker tag "$(docker images | grep -m 1 'spark-worker'  | awk '{print $3}')" ${IMAGE_REPOSITORY}/spark-worker:${SPARK_VERSION}
+  docker tag "$(docker images | grep -m 1 'spark-master'  | awk '{print $3}')" ${IMAGE_REPOSITORY}/spark-master:${SPARK_VERSION} 
+  docker tag "$(docker images | grep -m 1 'spark-history' | awk '{print $3}')" ${IMAGE_REPOSITORY}/spark-history:${SPARK_VERSION}
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # -- Main --------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
@@ -156,3 +172,4 @@ cleanContainers;
 cleanImages;
 cleanVolume;
 buildImages;
+addImageTags;

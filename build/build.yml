@@ -2,6 +2,7 @@ applications:
   spark: "3.3.0"
   jupyterlab: "3.4.8"
 build:
-  build_base: "false"
+  build_base: "true"
   build_spark: "true"
   build_jupyterlab: "true"
+repository: "ogre0403"
