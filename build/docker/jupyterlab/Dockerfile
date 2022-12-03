@@ -25,7 +25,7 @@ RUN apt-get update -y && \
     apt-get install -y python3-pip python3-dev && \
     pip3 install --upgrade pip && \
     pip3 install wget==3.2 pyspark==${spark_version} jupyterlab==${jupyterlab_version} && \
-    pip3 install numpy pandas
+    pip3 install numpy pandas theme-darcula
 
 # -- Layer: Scala kernel for Spark
 
