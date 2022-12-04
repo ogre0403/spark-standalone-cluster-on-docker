@@ -11,6 +11,8 @@ ingressClass: nginx
 accessMode: ReadWriteOnce
 domain: 127-0-0-1.nip.io
 
+workerCount: 1
+
 image:
   pullPolicy: IfNotPresent
   master: spark-master:3.3.0

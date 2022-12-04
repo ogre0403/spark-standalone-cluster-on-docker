@@ -1,24 +1,27 @@
+# https://github.com/helm/helm/issues/7149#issuecomment-676606513
 # deployment
+{{- $root := . -}}
+{{ range $i := (untilStep 0 ( .Values.workerCount | int) 1) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "worker.name" . }}
+  name: {{ include "worker.name" (dict "root" $root "index" $i) }}
   labels:
-    {{- include "worker.label" . | nindent 4 }}
+    {{- include "worker.label" (dict "root" $root "index" $i) | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "worker.label" . | nindent 6 }}
+      {{- include "worker.label" (dict "root" $root "index" $i) | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "worker.label" . | nindent 8 }}
+        {{- include "worker.label" (dict "root" $root "index" $i) | nindent 8 }}
     spec:
       containers:
       - name: my-worker
-        image: {{ .Values.image.worker }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: {{ $root.Values.image.worker }}
+        imagePullPolicy: {{ $root.Values.image.pullPolicy }}
         ports:
         - containerPort: 8081
           name: worker
@@ -29,7 +32,7 @@ spec:
           mountPath: /opt/log
         env:
         - name: SPARK_MASTER_HOST
-          value: {{ include "master.name" . }}
+          value: {{ include "master.name" $root }}
         - name: SPARK_MASTER_PORT
           value: "7077"    
         - name: SPARK_WORKER_CORES
@@ -37,45 +40,56 @@ spec:
         - name: SPARK_WORKER_MEMORY
           value: "512m"
         resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml $root.Values.resources | nindent 12 }}
       volumes:
       - name: hdfs
         persistentVolumeClaim:
-          claimName: {{ include "hdfs-pvc.name" . }}
+          claimName: {{ include "hdfs-pvc.name" $root }}
       - name: event-log
         persistentVolumeClaim:
-          claimName: {{ include "event-pvc.name" . }}   
+          claimName: {{ include "event-pvc.name" $root }}  
+---
+{{ end }}   
 ---
 # svc
+{{- $root := . -}}
+{{ range $i := (untilStep 0 ( .Values.workerCount | int) 1) }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "worker.name" . }}
+  name: {{ include "worker.name" (dict "root" $root "index" $i) }}
 spec:
   selector:
-    {{- include "worker.label" . | nindent 4 }}
+    {{- include "worker.label" (dict "root" $root "index" $i) | nindent 4 }}
   ports:
   - port: 8081
     targetPort: 8081
     name: worker
 ---
+{{ end }}   
+---
 # ingress
+{{- $root := . -}}
+{{ range $i := (untilStep 0 ( .Values.workerCount | int) 1) }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "worker.name" . }}
+  name: {{ include "worker.name" (dict "root" $root "index" $i) }}
   labels:
-    {{- include "worker.label" . | nindent 4 }}
+    {{- include "worker.label" (dict "root" $root "index" $i) | nindent 4 }}
 spec:
-  ingressClassName: {{ .Values.ingressClass }}
+  ingressClassName: {{ $root.Values.ingressClass }}
   rules:
-  - host: {{ include "worker.url" . }}
+  - host: {{ include "worker.url" (dict "root" $root "index" $i) }}
     http:
       paths:
       - pathType: Prefix
         path: "/"
         backend:
           service:
-            name: {{ include "worker.name" . }}
+            name: {{ include "worker.name" (dict "root" $root "index" $i) }}
             port: 
               number: 8081
+---
+{{ end }}              
+---

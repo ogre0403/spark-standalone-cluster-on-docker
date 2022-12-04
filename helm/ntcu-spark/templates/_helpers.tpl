@@ -61,15 +61,21 @@ app: {{ include "master.name" . }}
 
 
 {{- define "worker.name" -}}
-{{- printf "%s-%s" .Values.schoolId "worker" }}
+{{- $root := index . "root" -}}
+{{- $index := index . "index" -}}
+{{- printf "%s-%s-%d" $root.Values.schoolId "worker" $index}}
 {{- end }}
 
 {{- define "worker.label" -}}
-app: {{ include "worker.name" . }}
+{{- $root := index . "root" -}}
+{{- $index := index . "index" -}}
+app: {{ include "worker.name" (dict "root" $root "index" $index) }}
 {{- end }}
 
 {{- define "worker.url" -}}
-{{- printf "%s.%s" (include "worker.name" .) .Values.domain }}
+{{- $root := index . "root" -}}
+{{- $index := index . "index" -}}
+{{- printf "%s.%s" (include "worker.name" (dict "root" $root "index" $index)) $root.Values.domain }}
 {{- end }}
 
 # ===============================================
