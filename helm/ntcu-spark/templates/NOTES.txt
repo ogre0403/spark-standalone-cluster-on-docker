@@ -1,8 +1,11 @@
 1. access spark service in these URLs:
-    spark master  url: http://{{ include "master.url" . }}
-    spark worker  url: http://{{ include "worker.url" . }}
-    spark history url: http://{{ include "history.url" . }}
-    jupyter       url: http://{{ include "jupyter.url" . }}
+    jupyter        url: http://{{ include "jupyter.url" . }}
+    spark master   url: http://{{ include "master.url" . }}
+    spark history  url: http://{{ include "history.url" . }}
+{{- $root := . -}}
+{{- range $i := (untilStep 0 ( .Values.workerCount | int) 1) }}
+    spark worker-{{ . }} url: http://{{ include "worker.url" (dict "root" $root "index" $i) }}
+{{- end }}   
 
 
 {{- if .Values.token }}
